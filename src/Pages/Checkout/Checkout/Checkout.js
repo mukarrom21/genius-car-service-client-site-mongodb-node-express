@@ -1,6 +1,8 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import auth from "../../../firebase.init";
 import useServiceDetail from "../../../hooks/useServiceDetail";
 
@@ -8,32 +10,55 @@ const Checkout = () => {
   const { serviceId } = useParams();
   const [service] = useServiceDetail(serviceId);
   const [user] = useAuthState(auth);
-//   const [user, setUser] = useState({
-//     name: "Akbar The Great",
-//     email: "akbar@momo.taj",
-//     address: "Tajmohol Road Md.pur",
-//     phone: "01711111111",
-//   });
+  const navigate = useNavigate();
+  const locatin = useLocation();
 
-//   //Change controlled field
-//   const handleOnChange = (e) => {
-//     const { address, ...rest } = user;
-//     const newAddress = e.target.value;
-//     const newUser = { address: newAddress, ...rest };
-//     setUser(newUser);
-//   };
+
+  //   const [user, setUser] = useState({
+  //     name: "Akbar The Great",
+  //     email: "akbar@momo.taj",
+  //     address: "Tajmohol Road Md.pur",
+  //     phone: "01711111111",
+  //   });
+
+  //   //Change controlled field
+  //   const handleOnChange = (e) => {
+  //     const { address, ...rest } = user;
+  //     const newAddress = e.target.value;
+  //     const newUser = { address: newAddress, ...rest };
+  //     setUser(newUser);
+  //   };
+
+  const handleOnSubmit = (event) => {
+    event.preventDefault();
+    const order = {
+      email: user.email,
+      service: service.name,
+      serviceId: serviceId,
+      address: event.target.address.value,
+      phone: event.target.phone.value,
+    };
+    axios.post("http://localhost:5000/order", order).then((response) => {
+      if (response.data.insertedId) {
+        toast("Your order is booked!!!");
+        event.target.reset();
+      }
+    });
+  };
   return (
     <div className="w-50 mx-auto">
       <h2>Please Order: {service.name}</h2>
-      <form>
+      <form onSubmit={handleOnSubmit}>
         <input
           className="w-100 mb-2"
           type="text"
-          value={user.name}
+          value={user.displayName}
           name="name"
           id=""
           placeholder="Name"
           required
+          readOnly
+          disabled
         />
         <br />
         <input
@@ -44,6 +69,8 @@ const Checkout = () => {
           id=""
           placeholder="Email"
           required
+          disabled
+          readOnly
         />
         <br />
         <input
@@ -51,10 +78,11 @@ const Checkout = () => {
           type="text"
           value={service.name}
           name="name"
-          value={service.name}
           id=""
           placeholder="Name"
           required
+          disabled
+          readOnly
         />
         <br />
         <input
@@ -63,12 +91,13 @@ const Checkout = () => {
           id=""
           placeholder="Address"
           required
+          autoComplete="off"
         />
         <br />
         <input
           className="w-100 mb-2"
           type="text"
-          name="Phone"
+          name="phone"
           id=""
           placeholder="Phone"
           required
